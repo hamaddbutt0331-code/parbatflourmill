@@ -1,0 +1,21 @@
+{
+  "name": "parbat-find-a-dealer",
+  "version": "1.0.0",
+  "description": "Parbat Flour Mills – public dealer locator with Google Maps and admin panel",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node scripts/seed.js",
+    "create-admin": "node scripts/create-admin.js"
+  },
+  "dependencies": {
+    "bcryptjs": "2.4.3",
+    "better-sqlite3": "11.7.0",
+    "express": "4.21.2",
+    "xlsx": "0.18.5"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}
