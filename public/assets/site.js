@@ -16,7 +16,8 @@
   const waHref = m => { let d = digits(m); if (d.startsWith("0")) d = "92" + d.slice(1); return "https://wa.me/" + d + "?text=" + encodeURIComponent("Assalam o Alaikum, I found your shop on the Parbat Flour Mills dealer website."); };
   const dirHref = d => `https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}`;
   const placeHref = d => `https://www.google.com/maps/search/?api=1&query=${d.lat},${d.lng}`;
-  const addrLine = d => [d.address, d.street, d.area, d.town].filter(Boolean).filter((v, i, a) => a.findIndex(x => norm(x) === norm(v) || norm(x).includes(norm(v))) === i).join(", ");
+  const addrLine = d => { const parts = [...String(d.address || "").split(/\s*[,\-–]\s*/), d.street, d.area, d.town].map(x => String(x || "").trim()).filter(Boolean);
+    const out = []; for (const v of parts) { const k = norm(v); if (!k || out.some(x => norm(x) === k || norm(x).includes(k))) continue; for (let i = out.length - 1; i >= 0; i--) if (k.includes(norm(out[i]))) out.splice(i, 1); out.push(v); } return out.join(", "); };
   const ICON = {
     call: '<svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.6a1 1 0 0 1-.25 1z"/></svg>',
     wa: '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .6l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.3z"/></svg>',
