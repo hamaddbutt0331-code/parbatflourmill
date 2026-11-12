@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin | Parbat Find a Dealer</title><meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/assets/favicon-48.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png"><link rel="stylesheet" href="/assets/site.css"><link rel="stylesheet" href="/admin/static/admin.css">
+</head><body class="adm">
+<header class="hdr"><div class="wrap hdr-in">
+  <a class="brand" href="/admin"><picture class="logo-hdr"><source type="image/webp" srcset="/assets/parbat-logo-160.webp 160w, /assets/parbat-logo-320.webp 320w, /assets/parbat-logo-640.webp 640w" sizes="56px"><img src="/assets/parbat-logo-320.jpg" srcset="/assets/parbat-logo-160.jpg 160w, /assets/parbat-logo-320.jpg 320w, /assets/parbat-logo-640.jpg 640w, /assets/parbat-logo.jpg 1501w" sizes="56px" width="56" height="56" alt="Parbat Flour Mills logo" fetchpriority="high" decoding="async"></picture><span class="brand-tag">Dealer admin</span></a>
+  <nav class="nav" id="tabs">
+    <a href="#dealers" data-t="dealers">Dealers</a><a href="#import" data-t="import">Import Excel</a><a href="#salesmen" data-t="salesmen">Salesmen &amp; towns</a><a href="#settings" data-t="settings">Website settings</a><a href="#log" data-t="log">Activity log</a><a href="#account" data-t="account">Account</a>
+  </nav>
+  <a class="btn" href="/" target="_blank" rel="noopener">View website ↗</a>
+</div></header>
+<main class="wrap adm-main">
+  <div class="stats" id="stats"></div>
+  <section id="t-dealers" class="tab"></section>
+  <section id="t-import" class="tab" hidden></section>
+  <section id="t-salesmen" class="tab" hidden></section>
+  <section id="t-settings" class="tab" hidden></section>
+  <section id="t-log" class="tab" hidden></section>
+  <section id="t-account" class="tab" hidden></section>
+</main>
+<div class="modal" id="modal" hidden><div class="mbox" id="mbox" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" hidden></div>
+<div id="cfg" data-cfg="{{CONFIG}}" hidden></div>
+<script src="/admin/static/admin.js"></script>
+</body></html>

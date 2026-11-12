@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Find a Parbat Dealer in Multan | Parbat Flour Mills</title>
+<meta name="description" content="Locate your nearest authorized Parbat Flour Mills dealer in Multan. Search by shop name, area or town, see the shop on Google Maps, call or WhatsApp the dealer and get directions.">
+<link rel="canonical" href="{{BASE_URL}}/">
+<meta property="og:title" content="Find Your Nearest Parbat Dealer">
+<meta property="og:description" content="{{COUNT}} authorized Parbat Flour Mills dealers on the map. Atta, Maida and Choker near you.">
+<meta property="og:type" content="website">
+<meta property="og:image:width" content="640">
+<meta property="og:image:height" content="640">
+<meta property="og:url" content="{{BASE_URL}}/">
+<meta property="og:image" content="{{BASE_URL}}/assets/parbat-logo-640.jpg">
+<meta name="theme-color" content="#1E7B3C">
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/assets/favicon-48.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="preconnect" href="https://maps.googleapis.com">
+<link rel="stylesheet" href="/assets/site.css">
+<script type="application/ld+json">{{JSONLD}}</script>
+</head>
+<body>
+<a class="skip" href="#find">Skip to dealer search</a>
+<header class="hdr">
+  <div class="wrap hdr-in">
+    <a class="brand" href="/" aria-label="Parbat Flour Mills home"><picture class="logo-hdr"><source type="image/webp" srcset="/assets/parbat-logo-160.webp 160w, /assets/parbat-logo-320.webp 320w, /assets/parbat-logo-640.webp 640w" sizes="(max-width:600px) 52px, 68px"><img src="/assets/parbat-logo-320.jpg" srcset="/assets/parbat-logo-160.jpg 160w, /assets/parbat-logo-320.jpg 320w, /assets/parbat-logo-640.jpg 640w, /assets/parbat-logo.jpg 1501w" sizes="(max-width:600px) 52px, 68px" width="68" height="68" alt="Parbat Flour Mills logo" fetchpriority="high" decoding="async"></picture><span class="brand-tag">Find a Dealer</span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="/" aria-current="page">Home</a>
+      <a href="#find">Find a Dealer</a>
+      <a href="/contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap hero-in">
+      <picture class="logo-hero"><source type="image/webp" srcset="/assets/parbat-logo-160.webp 160w, /assets/parbat-logo-320.webp 320w, /assets/parbat-logo-640.webp 640w" sizes="(max-width:600px) 150px, (max-width:980px) 200px, 260px"><img src="/assets/parbat-logo-320.jpg" srcset="/assets/parbat-logo-160.jpg 160w, /assets/parbat-logo-320.jpg 320w, /assets/parbat-logo-640.jpg 640w, /assets/parbat-logo.jpg 1501w" sizes="(max-width:600px) 150px, (max-width:980px) 200px, 260px" width="260" height="260" alt="Parbat Flour Mills logo" fetchpriority="high" decoding="async"></picture>
+      <div class="hero-txt">
+      <h1>Find Your Nearest Parbat Dealer</h1>
+      <p class="lead">Locate your nearest authorized Parbat dealer and find our products in your area.</p>
+      <form class="search" id="searchForm" role="search">
+        <label class="sr" for="q">Search dealers</label>
+        <svg class="si" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input id="q" type="search" placeholder="Shop name, mobile number, area or street" autocomplete="off" enterkeyhint="search">
+        <button type="button" class="near" id="nearBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg><span>Near me</span></button>
+      </form>
+      <p class="stat"><b id="statCount">{{COUNT}}</b> authorized dealers across Multan · Atta · Maida · Choker</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="finder wrap" id="find" aria-label="Dealer finder">
+    <aside class="panel" id="panel">
+      <div class="filters" id="filters">
+        <div class="fg">
+          <h2 class="fl">Salesman area</h2>
+          <div class="chips" id="smChips" role="group" aria-label="Salesman"></div>
+        </div>
+        <div class="fg">
+          <h2 class="fl">Product</h2>
+          <div class="seg" id="prodSeg" role="group" aria-label="Product">
+            <button type="button" data-p="" aria-pressed="true">All Dealers</button>
+            <button type="button" data-p="Atta" aria-pressed="false">Atta</button>
+            <button type="button" data-p="Maida" aria-pressed="false">Maida</button>
+            <button type="button" data-p="Choker" aria-pressed="false">Choker</button>
+            <button type="button" data-p="AttaMaida" aria-pressed="false">Atta + Maida</button>
+          </div>
+        </div>
+        <div class="fg two">
+          <label><span class="fl">Town</span><select id="town"><option value="">All towns</option></select></label>
+          <label><span class="fl">Area</span><select id="area"><option value="">All areas</option></select></label>
+        </div>
+        <div class="fg">
+          <label><span class="fl">Street</span><input id="street" type="search" placeholder="Street or road name" autocomplete="off"></label>
+        </div>
+      </div>
+      <div class="listhead"><b id="resCount">Loading dealers…</b><button type="button" class="link" id="clearAll" hidden>Clear filters</button></div>
+      <ol class="list" id="list" aria-live="polite"></ol>
+    </aside>
+    <div class="mapcol">
+      <div id="map" role="region" aria-label="Map of Parbat dealers"></div>
+      <div class="mapmsg" id="mapMsg" hidden></div>
+    </div>
+  </section>
+
+  <section class="wrap seo" aria-label="All dealers by area">
+    <details>
+      <summary>All Parbat dealers by area</summary>
+      <div class="seo-cols">{{SEO_LIST}}</div>
+    </details>
+  </section>
+</main>
+
+<footer class="ftr">
+  <div class="wrap ftr-in">
+    <div class="ftr-logo"><picture class="logo-ftr"><source type="image/webp" srcset="/assets/parbat-logo-160.webp 160w, /assets/parbat-logo-320.webp 320w, /assets/parbat-logo-640.webp 640w" sizes="120px"><img src="/assets/parbat-logo-320.jpg" srcset="/assets/parbat-logo-160.jpg 160w, /assets/parbat-logo-320.jpg 320w, /assets/parbat-logo-640.jpg 640w, /assets/parbat-logo.jpg 1501w" sizes="120px" width="120" height="120" alt="Parbat Flour Mills logo" loading="lazy" decoding="async"></picture></div><div><b>Parbat Flour Mills</b><br>{{ADDRESS}}</div>
+    <div><a href="/contact">Contact us</a> · <a href="#find">Find a dealer</a></div>
+    <div class="muted">© {{YEAR}} Parbat Flour Mills, Multan</div>
+  </div>
+</footer>
+
+<button type="button" class="fab" id="fab" aria-controls="panel">Filters &amp; list</button>
+<div id="cfg" data-cfg="{{CONFIG}}" hidden></div>
+<script src="/assets/vendor/markerclusterer.min.js" defer></script>
+<script src="/assets/site.js" defer></script>
+</body>
+</html>

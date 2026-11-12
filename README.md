@@ -1,96 +1,86 @@
-# Parbat Flour Mills – Find a Dealer
+# Parbat Flour Mills – Find a Dealer (free version)
 
-Customers ke liye public dealer locator website (Google Maps ke saath) aur ek password-protected admin panel.
+Customers ke liye public dealer locator website (Google Maps ke saath) aur password-protected admin panel.
+Yeh version **muft** chalta hai:
+- **Hosting:** Render ka free plan. Address `....onrender.com` milta hai.
+- **Database:** Neon ka free Postgres database.
+
+## Free version mein kya farq hai
+- Website 15 minute tak koi na khole to Render ka free server so jata hai. Phir agla shakhs kholega to page khulne mein **taqreeban aadha se ek minute** lagta hai. Us ke baad sab tez chalta hai.
+- Database bhi khaali rehne par so jata hai, aur zaroorat padne par khud jaag jata hai.
+- Baad mein kabhi bhi Render ka paid plan le sakte hain. Is ke liye code mein koi tabdeeli nahi chahiye.
 
 ## Is mein kya hai
-
-**Public website (`/`, `/contact`)**
-- "Find Your Nearest Parbat Dealer" ka home page. Search bar aur "Near me" button (phone ki GPS se qareeb ke dealers).
+**Public website:**
+- Home page par "Find Your Nearest Parbat Dealer", search aur "Near me" button.
 - Google Map par har dealer ka pin. Har salesman ka rang alag hai, aur door se dekhne par qareeb ke pins ek group mein aa jate hain. Map aur Satellite dono views hain.
-- Shop ka naam, mobile, town, area aur street se search. Salesman (4) ke filter, product filter (Atta, Maida, Choker, Atta + Maida, All), aur Town/Area/Street ke filter. Sab filter ek saath kaam karte hain.
-- Pin ya list par click karne se dealer card khulta hai: naam, contact person, mobile, address, area, street, town, products aur GPS. Saath mein **Call Now**, **WhatsApp** aur **Get Directions** ke buttons.
-- SEO: page titles, description, sitemap.xml, robots.txt, Organization schema, aur saare dealers ki area-wise list HTML mein (Google ke liye).
+- Shop ka naam, mobile, town, area aur street se search. Filters: 4 salesmen, product (Atta, Maida, Choker, Atta + Maida, All), aur Town, Area, Street. Sab ek saath kaam karte hain.
+- Dealer card: naam, contact person, mobile, address, products aur GPS. Saath mein **Call Now**, **WhatsApp** aur **Get Directions** ke buttons.
+- Asli Parbat logo header, home page aur footer mein hai, aur browser tab ke icon mein bhi.
+- SEO ke liye sitemap aur robots.txt bhi hain.
 
-**Admin panel (`/admin`, sirf password se)**
-- Dealer add, edit aur delete karna. Website par dikhana ya chhupana (Publish/Hide). Mobile ko public par dikhana ya chhupana. Products ke checkbox.
+**Admin panel (`/admin`):**
+- Dealer add, edit aur delete karna. Website par dikhana ya chhupana (Publish/Hide). Mobile public par dikhana ya chhupana. Products ke checkbox.
 - GPS verify karna: satellite map par pin ko ghaseet kar sahi jagah rakhein, ya Google Maps ka link paste karein.
-- Excel/CSV import: columns khud pehchane jate hain (aap badal bhi sakte hain). Dealer pehle party code se, phir naam se milaya jata hai, is liye duplicate nahi banta. Milte-julte naam aap se confirm karwaye jate hain. Khaali cell purana data kabhi nahi mitata.
-- Salesman add karna, naam ya rang badalna, ya website se band karna. Town add karna.
-- Website settings (company address, phone, WhatsApp, email, map ka shuru wala hissa).
-- Activity log, password badalna, Excel export, database backup.
+- Excel/CSV import: columns khud pehchane jate hain. Dealer pehle party code se, phir naam se milaya jata hai, is liye duplicate nahi banta. Milte-julte naam aap se confirm karwaye jate hain.
+- Salesman aur town manage karna, website ki settings, activity log, password badalna, Excel export aur poora backup.
 
-**Security**
-- Public API (`/api/public/dealers`) sirf yeh fields deti hai: naam, contact person, mobile (agar "show" ho), address, town, area, street, GPS, products aur salesman ka naam. Sales, KG, ranking, purchase history, internal notes, party code aur GPS verification **kabhi bahar nahi jate**. Yeh data na kisi file mein hai na browser ke code mein.
-- Admin password bcrypt se save hota hai. Session cookie HttpOnly, SameSite=Strict aur Secure hai. Login par 15 minute mein 6 ghalat koshishon ki had hai. Admin API par CSRF protection hai. Security headers aur CSP lage hue hain.
+**Security:**
+- Website ko sirf public fields milti hain. Sales, KG, ranking, party code aur admin ke notes kabhi bahar nahi jate.
+- Admin password bcrypt se save hota hai. Login session cookie HttpOnly, Secure aur SameSite=Strict hai. Ghalat login ki koshishon par had hai, aur CSRF protection bhi hai.
 
-## Pehle se mojood data
-
-`data/seed-dealers.json` mein 4 salesmen (Zahid Amjad, Zahid Shah, Nadeem Ahmed, Rana Waheed) ke **376 active dealers** hain:
-- 268 ki GPS maujood hai, woh website par dikhenge.
-- 108 ki GPS abhi nahi hai. Woh admin mein "Missing GPS" ke tehat hain aur GPS daalne ke baad publish ho sakte hain.
-- Products (Atta/Maida/Choker) 1 Sep 2026 ke baad ki khareed se tay kiye gaye hain. Sirf "available hai ya nahi" save hai, koi quantity nahi.
+**Data:** Pehli dafa chalne par 376 active dealers khud database mein load ho jate hain. In mein se 268 ki GPS hai aur woh website par dikhte hain.
 
 ---
 
-## Website live karne ka tareeqa
+## Live karne ka tareeqa (sab free)
 
-### 1) Google Maps API key banayein (zaroori)
-1. https://console.cloud.google.com par jayein aur ek naya project banayein (masalan "Parbat Dealer Map").
-2. **Billing** account lagayein. Google is ke baghair Maps nahi chalata. Har mahine kuch free istemal milta hai; mojooda had Google Maps Platform pricing page par dekh lein.
-3. **APIs & Services → Library** mein **Maps JavaScript API** enable karein.
-4. **APIs & Services → Credentials → Create credentials → API key**.
-5. Key ko **restrict** karein:
-   - Application restrictions: **Websites**. Is mein `https://aapkadomain.com/*` aur `https://www.aapkadomain.com/*` daalein.
-   - API restrictions: sirf **Maps JavaScript API**.
-6. Yeh key aage `.env` file mein `GOOGLE_MAPS_API_KEY` mein daalni hai.
+### 1) Free database: Neon
+1. https://neon.tech par **Sign up** karein (Google ya GitHub account se).
+2. **Create project** dabayein. Naam rakhein `parbat`, Postgres version jo pehle se chuna ho wahi rehne dein, aur Region **Asia Pacific (Singapore)** chunein.
+3. Project banne ke baad **Connect** button dabayein. Wahan **Connection string** copy karein. Yeh `postgresql://...neon.tech/neondb?sslmode=require` jaisi hoti hai.
+4. Is ko sambhal kar rakhein. Yeh aap ke database ki chaabi hai, kisi ko na dein.
 
-### 2) Hosting: teen mein se ek tareeqa
+### 2) Google Maps key
+1. https://console.cloud.google.com par jayein aur naya project banayein.
+2. **Billing** mein card laga dein. Google is ke baghair Maps nahi deta. Har mahine kuch istemal muft hota hai.
+3. **APIs & Services → Library → Maps JavaScript API → Enable**.
+4. **Credentials → Create credentials → API key**. Key copy kar lein.
+5. Website ban jane ke baad (Qadam 4) key ko apne address tak restrict karna hai.
 
-**Tareeqa A: Render.com (sab se aasaan)**
-1. Yeh folder GitHub par ek private repository mein upload karein.
-2. Render par **New → Web Service** banayein aur repository chunein. Runtime **Docker** rakhein, kyunke Dockerfile project mein maujood hai.
-3. **Disk** add karein: Mount path `/data`, size 1 GB. Is ke baghair har deploy par data mit jayega.
-4. **Environment** mein yeh values daalein: `NODE_ENV=production`, `BASE_URL=https://aapkadomain.com`, `GOOGLE_MAPS_API_KEY=...`, `ADMIN_USER=...`, `ADMIN_PASSWORD=...` (kam az kam 10 characters), `TRUST_PROXY=true`.
-5. Deploy karein. Pehli dafa chalne par dealers khud load ho jayenge.
-6. **Settings → Custom Domain** mein apna domain daalein. Domain ki DNS mein Render ka diya hua CNAME record laga dein. HTTPS khud lag jata hai.
+### 3) Code GitHub par
+1. https://github.com par free account banayein.
+2. **New repository** dabayein. Naam `parbat-find-a-dealer` rakhein aur **Private** chunein.
+3. Zip file kholein aur andar ki **saari files aur folders** "uploading an existing file" wale hisse mein ghaseet kar daal dein. Phir **Commit changes** dabayein.
 
-**Tareeqa B: Apna VPS (Hostinger VPS, DigitalOcean waghera) aur Docker**
-```bash
-docker build -t parbat-dealers .
-docker run -d --name parbat --restart unless-stopped -p 3000:3000 -v parbat_data:/data \
-  -e NODE_ENV=production -e BASE_URL=https://aapkadomain.com -e GOOGLE_MAPS_API_KEY=... \
-  -e ADMIN_USER=admin -e ADMIN_PASSWORD='Mazboot-Password-123' -e TRUST_PROXY=true parbat-dealers
-```
-Is ke aage Nginx ya Caddy laga kar HTTPS aur domain set karein.
+### 4) Free hosting: Render
+1. https://render.com par **GitHub se sign up** karein.
+2. **New + → Blueprint** dabayein aur `parbat-find-a-dealer` repository chunein. Project mein mojood `render.yaml` file Render ko khud bata deti hai ke free plan aur Singapore region chahiye.
+3. Render yeh values poochega:
+   - `DATABASE_URL`: Neon wali connection string (Qadam 1)
+   - `GOOGLE_MAPS_API_KEY`: Google wali key (Qadam 2)
+   - `ADMIN_PASSWORD`: admin ka mazboot password, kam az kam 10 harf. Username `admin` hoga.
+4. **Apply** dabayein. 3–5 minute mein website ban jayegi, jaise `https://parbat-find-a-dealer.onrender.com`.
+5. Ab Google Cloud mein apni key kholein:
+   - **Application restrictions:** Websites → `https://parbat-find-a-dealer.onrender.com/*`
+   - **API restrictions:** sirf Maps JavaScript API
+   - **Save** dabayein.
 
-**Tareeqa C: Docker ke baghair, sirf Node.js (Node 18 ya naya)**
-```bash
-cp .env.example .env      # phir .env mein values bharein
-npm install --omit=dev
-npm run seed              # sirf pehli dafa: 376 dealers load karta hai
-npm start
-```
-Note: `better-sqlite3` ek native library hai. Kuch sasti shared cPanel hosting par yeh install nahi hoti. Aisa ho to Tareeqa A ya B istemal karein.
+> Agar Blueprint ka option na mile: **New + → Web Service** chunein, repository chunein, Runtime **Node**, Build command `npm ci --omit=dev`, Start command `node server.js`, Instance **Free**. Phir Environment mein `DATABASE_URL`, `GOOGLE_MAPS_API_KEY`, `ADMIN_USER=admin`, `ADMIN_PASSWORD` aur `NODE_ENV=production` daal dein.
 
-### 3) Live hone ke baad
-- `https://aapkadomain.com/admin` par sign in karein. **Account** tab mein password badal dein.
-- **Website settings** mein company ka phone, WhatsApp aur email daalein. Yeh Contact page par nazar aayenge.
-- **Dealers → "GPS not verified"** filter se 5 dealers ki location satellite map par check karein.
-- **Dealers → "Missing GPS"** mein jo dealers hain, un ki GPS daal kar unhein website par dikhayein.
-- Google Search Console mein apna domain add karein aur `https://aapkadomain.com/sitemap.xml` submit karein.
+### 5) Pehli dafa admin
+1. `https://parbat-find-a-dealer.onrender.com/admin` kholein. Username `admin` hai aur password wahi jo Qadam 4 mein diya tha.
+2. **Account** tab mein password badal dein.
+3. **Website settings** mein company ka phone, WhatsApp aur email daalein.
+4. **Dealers → "GPS not verified"** se 5 dealers ki location satellite par check karein.
 
-### Backup
-- Admin → **Account → Download database backup** (poora database) aur **Download Excel**. Har mahine ek copy sambhal kar rakhein.
-- Database ki file `DATA_DIR/parbat.db` mein hai.
+### 6) Google par aane ke liye (optional)
+https://search.google.com/search-console par apna address add karein aur `sitemap.xml` submit karein.
 
-### Admin bhool jayein to
-Server par yeh command chalayein: `npm run create-admin -- admin NayaMazbootPassword123` (yeh password reset bhi kar deta hai).
+---
 
-## Files
-- `server.js`: website, public API, admin API aur security
-- `src/db.js`: database tables aur default settings
-- `src/importer.js`: Excel/CSV import aur duplicate se bachao
-- `views/`: public pages (home, contact, 404)
-- `public/assets/`: website ka design, map ka code, logo
-- `admin/`: admin login aur panel (sirf sign in ke baad)
-- `data/seed-dealers.json`: shuru ka dealer data (sirf public fields aur products)
+## Baad mein
+- **Backup:** Har mahine Admin → **Account → Download full backup** karein.
+- **Apna domain:** Jab domain khareedein, Render → Settings → **Custom Domains** mein daal dein. Google key mein naya address bhi add kar dein.
+- **Password bhool gaye:** Render → Environment mein `ADMIN_USER=admin`, naya `ADMIN_PASSWORD` aur `ADMIN_RESET_PASSWORD=yes` daalein aur save karein. Website restart hogi aur password badal jayega. Us ke baad `ADMIN_RESET_PASSWORD` mita dein.
+- **Apne computer par chalana:** `.env.example` ko `.env` bana kar bharein, phir `npm install` aur `npm start` chalayein.

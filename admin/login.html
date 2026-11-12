@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin sign in | Parbat Find a Dealer</title><meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/assets/favicon-48.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png"><link rel="stylesheet" href="/assets/site.css">
+<style>.box{max-width:380px;margin:9vh auto;background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px;box-shadow:var(--shadow)}.box h1{font-size:22px;margin:14px 0 4px}.box label{display:flex;flex-direction:column;gap:6px;margin-top:14px;font-size:13px;font-weight:600;color:var(--muted)}.box input{font:inherit;font-size:15px;padding:11px 12px;border:1.5px solid var(--line2);border-radius:10px}.box input:focus{border-color:var(--green);outline:0}.box button{margin-top:18px;width:100%;padding:12px}.err{color:var(--danger);font-size:14px;min-height:20px;margin:10px 0 0}</style>
+</head><body>
+<form class="box" id="f" autocomplete="on">
+  <picture class="logo-login"><source type="image/webp" srcset="/assets/parbat-logo-160.webp 160w, /assets/parbat-logo-320.webp 320w, /assets/parbat-logo-640.webp 640w" sizes="150px"><img src="/assets/parbat-logo-320.jpg" srcset="/assets/parbat-logo-160.jpg 160w, /assets/parbat-logo-320.jpg 320w, /assets/parbat-logo-640.jpg 640w, /assets/parbat-logo.jpg 1501w" sizes="150px" width="150" height="150" alt="Parbat Flour Mills logo" fetchpriority="high" decoding="async"></picture>
+  <h1>Admin sign in</h1><p style="margin:0;color:var(--muted);font-size:14px">Parbat Flour Mills – Find a Dealer</p>
+  <label>Username<input id="u" name="username" autocomplete="username" required></label>
+  <label>Password<input id="p" name="password" type="password" autocomplete="current-password" required></label>
+  <p class="err" id="e" role="alert"></p>
+  <button class="btn call" type="submit">Sign in</button>
+</form>
+<script src="/assets/admin-login.js"></script>
+</body></html>
