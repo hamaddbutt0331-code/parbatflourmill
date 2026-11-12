@@ -12,9 +12,11 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 const local = /@(localhost|127\.0\.0\.1)[:/]/.test(process.env.DATABASE_URL);
+// node-postgres does not use libpq's channel_binding option; drop it so Neon's copied string works as-is.
+const DB_URL = process.env.DATABASE_URL.trim().replace(/([?&])channel_binding=[^&]*(&|$)/, (m, a, b) => (b ? a : "")).replace(/[?&]$/, "");
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: local || /sslmode=disable/.test(process.env.DATABASE_URL) ? false : { rejectUnauthorized: false },
+  connectionString: DB_URL,
+  ssl: local || /sslmode=disable/.test(DB_URL) ? false : { rejectUnauthorized: false },
   max: 5, idleTimeoutMillis: 30000, connectionTimeoutMillis: 20000,
 });
 pool.on("error", e => console.error("Database connection error:", e.message));
