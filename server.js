@@ -69,7 +69,9 @@ app.get("/healthz", (req, res) => res.type("text/plain").send("ok"));
 
 /* ---------- pages ---------- */
 const tpl = name => fs.readFileSync(path.join(__dirname, "views", name), "utf8");
-function render(name, vars) { return tpl(name).replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? ""); }
+// Browsers keep /assets files for 7 days, so page links carry a version that changes whenever the files change.
+const ASSET_V = require("crypto").createHash("md5").update(["site.js", "site.css"].map(f => fs.readFileSync(path.join(__dirname, "public", "assets", f))).join("")).digest("hex").slice(0, 10);
+function render(name, vars) { return tpl(name).replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? "").replace(/"(\/assets\/site\.(?:js|css))"/g, `"$1?v=${ASSET_V}"`); }
 function waNumber(m) { let d = String(m || "").replace(/\D/g, ""); if (d.startsWith("0")) d = "92" + d.slice(1); return d; }
 let settingsCache = null;
 async function settings() { if (!settingsCache) settingsCache = await getSettings(); return settingsCache; }
