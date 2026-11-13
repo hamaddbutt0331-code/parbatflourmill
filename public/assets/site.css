@@ -89,7 +89,7 @@ select:focus,.fg input:focus{border-color:var(--green);outline:0}
 .empty{padding:28px 16px;color:var(--muted);text-align:center}
 /* map */
 .mapcol{position:relative;min-width:0}
-#map{height:calc(100vh - 100px);min-height:520px;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:#E9EFEA;box-shadow:var(--shadow);position:sticky;top:84px}
+#map{z-index:0;height:calc(100vh - 100px);min-height:520px;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:#E9EFEA;box-shadow:var(--shadow);position:sticky;top:84px}
 .mapmsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--muted);border-radius:var(--r)}
 .mapmsg div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;max-width:420px;box-shadow:var(--shadow)}
 /* info window */
@@ -146,3 +146,13 @@ select:focus,.fg input:focus{border-color:var(--green);outline:0}
   .fg.two{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* free OpenStreetMap map (used when no Google Maps key is set) */
+.lpin{background:none;border:0}
+.lpin svg{display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.lc{display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(30,123,60,.93);color:#fff;font:700 12px var(--font);border:3px solid #fff;box-shadow:0 0 0 2px var(--gold),0 2px 8px rgba(0,0,0,.3)}
+.leaflet-container{font-family:var(--font)}
+.leaflet-popup-content{margin:14px 16px}
+.leaflet-popup-content-wrapper{border-radius:14px}
+.leaflet-control-layers{border-radius:10px!important;font-weight:600;font-size:13px}
+.leaflet-control-layers label{margin:2px 0}

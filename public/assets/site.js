@@ -7,6 +7,7 @@
   let DEALERS = [], SALESMEN = [], COLOR = {}, FILTERED = [];
   let map, info, clusterer, meMarker, MARKERS = new Map(), mapReady = false;
   const isTouch = matchMedia("(pointer:coarse)").matches;
+  const LEAF = !CFG.mapsKey; // no Google key: free OpenStreetMap map (Leaflet)
 
   const norm = s => String(s || "").toUpperCase().replace(/KERYANA|KIRYANA|KRYANA/g, "KARYANA").replace(/[^A-Z0-9]/g, "");
   const digits = s => String(s || "").replace(/\D/g, "");
@@ -112,7 +113,11 @@
       b.removeAttribute("aria-busy");
       S.me = { lat: p.coords.latitude, lng: p.coords.longitude }; apply();
       document.getElementById("find").scrollIntoView({ behavior: "smooth" });
-      if (mapReady) {
+      if (mapReady && LEAF) {
+        if (meMarker) meMarker.remove();
+        meMarker = L.circleMarker([S.me.lat, S.me.lng], { radius: 9, color: "#fff", weight: 3, fillColor: "#2563EB", fillOpacity: 1 }).addTo(map).bindTooltip("You are here");
+        map.fitBounds(L.latLngBounds([[S.me.lat, S.me.lng], ...FILTERED.slice(0, 5).map(d => [d.lat, d.lng])]), { padding: [60, 60] });
+      } else if (mapReady) {
         if (meMarker) meMarker.setMap(null);
         meMarker = new google.maps.Marker({ position: S.me, map, title: "You are here", zIndex: 9999, icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: "#2563EB", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3 } });
         const b2 = new google.maps.LatLngBounds(); b2.extend(S.me); FILTERED.slice(0, 5).forEach(d => b2.extend(d)); map.fitBounds(b2, 60);
@@ -139,11 +144,41 @@
     s.async = true; s.onerror = () => showMapMsg("The map could not load. Check your internet connection. You can still use the list and open any shop in Google Maps.");
     document.head.append(s);
     window.gm_authFailure = () => showMapMsg("The map is not available right now. You can still use the list and open any shop in Google Maps.");
-  } else showMapMsg("The map will appear here once the Google Maps key is added. You can still search the list and open any shop in Google Maps.");
+  } else {
+    const css = h => { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = h; document.head.append(l); };
+    const js = src => new Promise((res, rej) => { const x = document.createElement("script"); x.src = src; x.onload = res; x.onerror = rej; document.head.append(x); });
+    css("/assets/vendor/leaflet/leaflet.css"); css("/assets/vendor/leaflet/MarkerCluster.css");
+    js("/assets/vendor/leaflet/leaflet.js").then(() => js("/assets/vendor/leaflet/leaflet.markercluster.js")).then(initLeaflet)
+      .catch(() => showMapMsg("The map could not load. You can still use the list and open any shop in Google Maps."));
+  }
+  function initLeaflet() {
+    map = L.map($("#map"), { center: CFG.center, zoom: CFG.zoom, zoomControl: false });
+    L.control.zoom({ position: "bottomright" }).addTo(map);
+    const road = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors' }).addTo(map);
+    const sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Imagery &copy; Esri, Maxar, Earthstar Geographics" });
+    L.control.layers({ "Map": road, "Satellite": sat }, null, { position: "topleft", collapsed: false }).addTo(map);
+    map.on("popupclose", e => { if (e.popup._dealerId === S.sel) { S.sel = null; highlight(); } });
+    mapReady = true;
+    if (DEALERS.length) { buildMarkers(); openFromHash(); }
+  }
+  const pinSvg = (color, s) => `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s * 1.3}" viewBox="0 0 24 31"><path d="M12 30s10-10.3 10-18A10 10 0 0 0 2 12c0 7.7 10 18 10 18z" fill="${color}" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="#fff"/></svg>`;
+  function buildLeafletMarkers() {
+    MARKERS.clear();
+    for (const d of DEALERS) {
+      const m = L.marker([d.lat, d.lng], { title: d.name, icon: L.divIcon({ className: "lpin", html: pinSvg(COLOR[d.salesman] || "#1E7B3C", 26), iconSize: [26, 34], iconAnchor: [13, 34] }) });
+      m.on("click", () => select(d, false));
+      MARKERS.set(d.id, m);
+    }
+    clusterer = L.markerClusterGroup({ maxClusterRadius: 60, disableClusteringAtZoom: 16, showCoverageOnHover: false,
+      iconCreateFunction: c => { const n = c.getChildCount(), z = n < 20 ? 40 : n < 80 ? 48 : 56; return L.divIcon({ className: "", html: `<div class="lc" style="width:${z}px;height:${z}px">${n}</div>`, iconSize: [z, z] }); } });
+    map.addLayer(clusterer);
+    updateMarkers(true);
+  }
   function showMapMsg(t) { const m = $("#mapMsg"); m.hidden = false; m.innerHTML = ""; m.append(el("div", null, t)); }
 
   function pinIcon(color, big) { const s = big ? 34 : 26; return { url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s * 1.3}" viewBox="0 0 24 31"><path d="M12 30s10-10.3 10-18A10 10 0 0 0 2 12c0 7.7 10 18 10 18z" fill="${color}" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="#fff"/></svg>`), scaledSize: new google.maps.Size(s, s * 1.3), anchor: new google.maps.Point(s / 2, s * 1.3) }; }
   function buildMarkers() {
+    if (LEAF) return buildLeafletMarkers();
     MARKERS.clear();
     for (const d of DEALERS) {
       const m = new google.maps.Marker({ position: { lat: d.lat, lng: d.lng }, title: d.name, icon: pinIcon(COLOR[d.salesman] || "#1E7B3C"), optimized: true });
@@ -160,6 +195,15 @@
   function updateMarkers(first) {
     if (!mapReady || !clusterer) return;
     const vis = FILTERED.map(d => MARKERS.get(d.id)).filter(Boolean);
+    if (LEAF) {
+      clusterer.clearLayers(); clusterer.addLayers(vis);
+      if (S.sel && !FILTERED.some(d => d.id === S.sel)) { map.closePopup(); S.sel = null; }
+      if (!S.me && FILTERED.length && (first || !fitted || FILTERED.length < DEALERS.length)) {
+        if (FILTERED.length === 1) map.setView([FILTERED[0].lat, FILTERED[0].lng], 17); else map.fitBounds(L.latLngBounds(FILTERED.map(d => [d.lat, d.lng])), { padding: [48, 48] });
+        fitted = true;
+      }
+      return;
+    }
     clusterer.clearMarkers(); clusterer.addMarkers(vis);
     if (S.sel && !FILTERED.some(d => d.id === S.sel)) { info.close(); S.sel = null; }
     if (!S.me && FILTERED.length && (first || !fitted || FILTERED.length < DEALERS.length)) {
@@ -185,6 +229,11 @@
     history.replaceState(null, "", "#dealer-" + d.id);
     if (!mapReady) { if (fromList) window.open(placeHref(d), "_blank", "noopener"); return; }
     const m = MARKERS.get(d.id);
+    if (LEAF) {
+      const open = () => { const p = L.popup({ maxWidth: 320, offset: [0, -28] }).setLatLng([d.lat, d.lng]).setContent(infoContent(d)); p._dealerId = d.id; p.openOn(map); };
+      if (fromList && m) { if (matchMedia("(max-width:980px)").matches) $("#map").scrollIntoView({ behavior: "smooth", block: "start" }); clusterer.zoomToShowLayer(m, open); } else open();
+      return;
+    }
     if (fromList) { map.panTo(d); if (map.getZoom() < 16) map.setZoom(17); if (matchMedia("(max-width:980px)").matches) $("#map").scrollIntoView({ behavior: "smooth", block: "start" }); }
     setTimeout(() => { info.setContent(infoContent(d)); info.open({ map, anchor: m }); }, fromList ? 250 : 0);
   }

@@ -37,7 +37,7 @@ app.use((req, res, next) => {
     const g = "https://*.googleapis.com https://*.gstatic.com https://*.google.com https://*.ggpht.com https://*.googleusercontent.com";
     res.setHeader("Content-Security-Policy", [
       "default-src 'self'", `script-src 'self' ${g} 'unsafe-eval' blob:`, `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
-      `font-src 'self' https://fonts.gstatic.com data:`, `img-src 'self' data: blob: ${g}`, `connect-src 'self' ${g} data: blob:`,
+      `font-src 'self' https://fonts.gstatic.com data:`, `img-src 'self' data: blob: ${g} https://*.tile.openstreetmap.org https://server.arcgisonline.com`, `connect-src 'self' ${g} data: blob:`,
       `worker-src 'self' blob:`, `frame-src https://*.google.com`, "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'self'",
     ].join("; "));
   }
