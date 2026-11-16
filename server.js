@@ -49,12 +49,13 @@ let pubVersion = Date.now(), pubCache = null;
 const bump = () => { pubVersion = Date.now(); pubCache = null; };
 async function publicDealers() {
   if (pubCache) return pubCache;
-  const rows = await q(`SELECT d.id,d.name,d.contact_person,d.mobile,d.show_mobile,d.address,d.town,d.area,d.street,d.lat,d.lng,d.has_atta,d.has_maida,d.has_choker,s.name salesman
+  const rows = await q(`SELECT d.id,d.name,d.contact_person,d.mobile,d.show_mobile,d.address,d.town,d.area,d.street,d.lat,d.lng,d.has_atta,d.has_maida,d.has_choker,s.name salesman,
+    (SELECT floor(extract(epoch from p.updated_at))::bigint FROM dealer_photos p WHERE p.dealer_id=d.id) photo
     FROM dealers d JOIN salesmen s ON s.id=d.salesman_id
     WHERE d.published=1 AND s.active=1 AND d.lat IS NOT NULL AND d.lng IS NOT NULL ORDER BY d.name`);
   // Public fields only: nothing about sales, ranking, purchases, codes or internal notes leaves through here.
   const dealers = rows.map(r => ({ id: r.id, name: r.name, contact: r.contact_person, mobile: r.show_mobile ? r.mobile : "", address: r.address, town: r.town, area: r.area, street: r.street,
-    lat: +(+r.lat).toFixed(6), lng: +(+r.lng).toFixed(6), products: [r.has_atta && "Atta", r.has_maida && "Maida", r.has_choker && "Choker"].filter(Boolean), salesman: r.salesman }));
+    lat: +(+r.lat).toFixed(6), lng: +(+r.lng).toFixed(6), products: [r.has_atta && "Atta", r.has_maida && "Maida", r.has_choker && "Choker"].filter(Boolean), salesman: r.salesman, photo: r.photo ? Number(r.photo) : 0 }));
   const salesmen = await q("SELECT name,color FROM salesmen WHERE active=1 ORDER BY sort,name");
   pubCache = { version: pubVersion, dealers, salesmen };
   return pubCache;
@@ -64,6 +65,14 @@ app.get("/api/public/dealers", A(async (req, res) => {
   res.setHeader("Cache-Control", "public, max-age=60"); res.setHeader("ETag", etag);
   if (req.headers["if-none-match"] === etag) return res.status(304).end();
   res.json(p);
+}));
+// Shop photo of a published dealer. ?s=t gives the small thumbnail.
+app.get("/photo/:id", A(async (req, res) => {
+  const col = req.query.s === "t" ? "thumb" : "image";
+  const r = await one(`SELECT p.${col} img FROM dealer_photos p JOIN dealers d ON d.id=p.dealer_id JOIN salesmen s ON s.id=d.salesman_id WHERE d.id=$1 AND d.published=1 AND s.active=1`, [+req.params.id || 0]);
+  if (!r) return res.status(404).type("text/plain").send("No photo");
+  res.setHeader("Cache-Control", "public, max-age=2592000, immutable"); // the page link carries a version, so a new photo gets a new address
+  res.type("image/jpeg").send(r.img);
 }));
 app.get("/healthz", (req, res) => res.type("text/plain").send("ok"));
 
@@ -143,7 +152,19 @@ async function validateDealer(b, existingId) {
 }
 const dealerRow = id => one("SELECT d.*, s.name salesman FROM dealers d LEFT JOIN salesmen s ON s.id=d.salesman_id WHERE d.id=$1", [id]);
 
-api.get("/dealers", A(async (req, res) => res.json(await q("SELECT d.*, s.name salesman, s.color FROM dealers d LEFT JOIN salesmen s ON s.id=d.salesman_id ORDER BY d.name"))));
+api.get("/dealers", A(async (req, res) => res.json(await q("SELECT d.*, s.name salesman, s.color, (SELECT floor(extract(epoch from p.updated_at))::bigint FROM dealer_photos p WHERE p.dealer_id=d.id) photo FROM dealers d LEFT JOIN salesmen s ON s.id=d.salesman_id ORDER BY d.name"))));
+// Photos: the admin page shrinks the picture in the browser and sends two small JPEGs as base64.
+const isJpeg = b => b.length > 100 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+api.get("/dealers/:id/photo", A(async (req, res) => { const r = await one(`SELECT ${req.query.s === "t" ? "thumb" : "image"} img FROM dealer_photos WHERE dealer_id=$1`, [+req.params.id || 0]); if (!r) return res.status(404).end(); res.setHeader("Cache-Control", "no-store"); res.type("image/jpeg").send(r.img); }));
+api.put("/dealers/:id/photo", A(async (req, res) => {
+  const d = await dealerRow(+req.params.id); if (!d) return res.status(404).json({ error: "Dealer not found." });
+  let image, thumb; try { image = Buffer.from(String(req.body.image || ""), "base64"); thumb = Buffer.from(String(req.body.thumb || ""), "base64"); } catch (_) {}
+  if (!image || !thumb || !isJpeg(image) || !isJpeg(thumb)) return res.status(400).json({ error: "The picture could not be read. Choose a JPG or PNG photo." });
+  if (image.length > 600 * 1024 || thumb.length > 60 * 1024) return res.status(400).json({ error: "The picture is too large." });
+  await run("INSERT INTO dealer_photos(dealer_id,image,thumb) VALUES($1,$2,$3) ON CONFLICT (dealer_id) DO UPDATE SET image=excluded.image, thumb=excluded.thumb, updated_at=now()", [d.id, image, thumb]);
+  await log(req, "Uploaded shop photo", d.id, `${Math.round(image.length / 1024)} KB`); bump(); res.json({ ok: true });
+}));
+api.delete("/dealers/:id/photo", A(async (req, res) => { const n = await run("DELETE FROM dealer_photos WHERE dealer_id=$1", [+req.params.id || 0]); if (n) { await log(req, "Removed shop photo", +req.params.id); bump(); } res.json({ ok: true }); }));
 api.post("/dealers", A(async (req, res) => {
   const { o, errs } = await validateDealer(req.body); if (!o.name) errs.push("Dealer name is required.");
   if (errs.length) return res.status(400).json({ error: [...new Set(errs)].join(" ") });
@@ -199,7 +220,7 @@ api.put("/settings", A(async (req, res) => { const ch = {};
 
 api.get("/audit", A(async (req, res) => res.json(await q("SELECT a.id, to_char(a.at AT TIME ZONE 'Asia/Karachi','YYYY-MM-DD HH24:MI') at, a.admin, a.action, a.dealer_id, a.details, d.name dealer FROM audit a LEFT JOIN dealers d ON d.id=a.dealer_id ORDER BY a.id DESC LIMIT 500"))));
 api.get("/stats", A(async (req, res) => res.json(await one(`SELECT COUNT(*)::int total, COALESCE(SUM(published),0)::int published, COUNT(*) FILTER (WHERE lat IS NULL)::int no_gps,
-  COUNT(*) FILTER (WHERE lat IS NOT NULL AND gps_verified=0)::int unverified, COUNT(*) FILTER (WHERE mobile='')::int no_mobile, COUNT(*) FILTER (WHERE salesman_id IS NULL)::int no_salesman FROM dealers`))));
+  COUNT(*) FILTER (WHERE lat IS NOT NULL AND gps_verified=0)::int unverified, COUNT(*) FILTER (WHERE mobile='')::int no_mobile, COUNT(*) FILTER (WHERE salesman_id IS NULL)::int no_salesman, COUNT(*) FILTER (WHERE NOT EXISTS (SELECT 1 FROM dealer_photos p WHERE p.dealer_id=dealers.id))::int no_photo FROM dealers`))));
 
 app.post("/api/admin/import/preview", auth.requireApi, express.raw({ type: "application/octet-stream", limit: "15mb" }), A(async (req, res) => {
   let parsed;

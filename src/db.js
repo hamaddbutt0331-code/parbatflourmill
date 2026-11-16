@@ -75,6 +75,12 @@ CREATE TABLE IF NOT EXISTS admins ( id SERIAL PRIMARY KEY, username TEXT NOT NUL
 CREATE UNIQUE INDEX IF NOT EXISTS admins_user ON admins (lower(username));
 CREATE TABLE IF NOT EXISTS sessions ( token_hash TEXT PRIMARY KEY, admin_id INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE, expires_at BIGINT NOT NULL );
 CREATE TABLE IF NOT EXISTS settings ( key TEXT PRIMARY KEY, value TEXT NOT NULL );
+CREATE TABLE IF NOT EXISTS dealer_photos (
+  dealer_id INTEGER PRIMARY KEY REFERENCES dealers(id) ON DELETE CASCADE,
+  image BYTEA NOT NULL,            -- JPEG, longest side about 1000px
+  thumb BYTEA NOT NULL,            -- JPEG, about 200px
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 CREATE TABLE IF NOT EXISTS audit (
   id SERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(), admin TEXT NOT NULL, action TEXT NOT NULL,
   dealer_id INTEGER, details TEXT NOT NULL DEFAULT ''

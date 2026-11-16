@@ -156,3 +156,8 @@ select:focus,.fg input:focus{border-color:var(--green);outline:0}
 .leaflet-popup-content-wrapper{border-radius:14px}
 .leaflet-control-layers{border-radius:10px!important;font-weight:600;font-size:13px}
 .leaflet-control-layers label{margin:2px 0}
+
+/* shop photos */
+.card .thumb{width:64px;height:64px;flex:none;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:#EEF2EF}
+.iw .shot{display:block;margin:0 0 10px;border-radius:10px;overflow:hidden;background:#EEF2EF}
+.iw .shot img{display:block;width:100%;height:160px;object-fit:cover}

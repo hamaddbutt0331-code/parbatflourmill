@@ -16,6 +16,7 @@
   const telHref = m => "tel:" + digits(m);
   const waHref = m => { let d = digits(m); if (d.startsWith("0")) d = "92" + d.slice(1); return "https://wa.me/" + d + "?text=" + encodeURIComponent("Assalam o Alaikum, I found your shop on the Parbat Flour Mills dealer website."); };
   const dirHref = d => `https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}`;
+  const photoSrc = (d, small) => `/photo/${d.id}?${small ? "s=t&" : ""}v=${d.photo}`;
   const placeHref = d => `https://www.google.com/maps/search/?api=1&query=${d.lat},${d.lng}`;
   const addrLine = d => { const parts = [...String(d.address || "").split(/\s*[,\-–]\s*/), d.street, d.area, d.town].map(x => String(x || "").trim()).filter(Boolean);
     const out = []; for (const v of parts) { const k = norm(v); if (!k || out.some(x => norm(x) === k || norm(x).includes(k))) continue; for (let i = out.length - 1; i >= 0; i--) if (k.includes(norm(out[i]))) out.splice(i, 1); out.push(v); } return out.join(", "); };
@@ -91,7 +92,8 @@
     const li = el("li", { class: "card" + (S.sel === d.id ? " sel" : ""), "data-id": d.id, tabindex: "0" },
       el("div", { class: "top" }, el("span", { class: "pin", style: `background:${COLOR[d.salesman] || "#1E7B3C"}` }),
         el("div", { style: "min-width:0;flex:1" }, el("h3", null, d.name), el("p", { class: "addr" }, addrLine(d)),
-          el("div", { class: "meta" }, prodPills(d), d._dist != null && S.me ? el("span", { class: "dist" }, d._dist < 1 ? Math.round(d._dist * 1000) + " m" : d._dist.toFixed(1) + " km") : null))),
+          el("div", { class: "meta" }, prodPills(d), d._dist != null && S.me ? el("span", { class: "dist" }, d._dist < 1 ? Math.round(d._dist * 1000) + " m" : d._dist.toFixed(1) + " km") : null)),
+        d.photo ? el("img", { class: "thumb", src: photoSrc(d, true), alt: "", loading: "lazy", width: "64", height: "64" }) : null),
       actions(d));
     li.addEventListener("click", e => { if (e.target.closest("a")) return; select(d, true); });
     li.addEventListener("keydown", e => { if (e.key === "Enter") select(d, true); });
@@ -213,7 +215,7 @@
     }
   }
   function infoContent(d) {
-    const box = el("div", { class: "iw" }, el("h3", null, d.name), d.contact ? el("p", { class: "who" }, "Contact: " + d.contact) : null,
+    const box = el("div", { class: "iw" }, d.photo ? el("a", { class: "shot", href: photoSrc(d), target: "_blank", rel: "noopener", title: "Open full photo" }, el("img", { src: photoSrc(d), alt: "Shop photo of " + d.name, width: "290", height: "160" })) : null, el("h3", null, d.name), d.contact ? el("p", { class: "who" }, "Contact: " + d.contact) : null,
       el("div", { class: "meta" }, prodPills(d)),
       el("dl", null, d.mobile ? [el("dt", null, "Mobile"), el("dd", null, el("a", { href: telHref(d.mobile) }, d.mobile))] : null,
         el("dt", null, "Address"), el("dd", null, addrLine(d) || d.town),

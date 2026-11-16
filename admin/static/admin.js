@@ -29,7 +29,7 @@
     [DEALERS, SALESMEN, TOWNS] = await Promise.all([call("GET", "/api/admin/dealers"), call("GET", "/api/admin/salesmen"), call("GET", "/api/admin/towns")]);
     const s = await call("GET", "/api/admin/stats");
     const c = (n, l, w) => `<div class="stat-c ${w && n ? "warn" : ""}"><b>${n || 0}</b><span>${l}</span></div>`;
-    $("#stats").innerHTML = c(s.total, "Dealers") + c(s.published, "On website") + c(s.no_gps, "Missing GPS", 1) + c(s.unverified, "GPS not verified", 1) + c(s.no_mobile, "Missing mobile", 1) + c(s.no_salesman, "No salesman", 1);
+    $("#stats").innerHTML = c(s.total, "Dealers") + c(s.published, "On website") + c(s.no_gps, "Missing GPS", 1) + c(s.unverified, "GPS not verified", 1) + c(s.no_mobile, "Missing mobile", 1) + c(s.no_salesman, "No salesman", 1) + c(s.no_photo, "No shop photo", 1);
   }
   async function refresh() { await load(); route(); }
 
@@ -50,6 +50,7 @@
       if (F.st === "pub" && !d.published) return false; if (F.st === "hid" && d.published) return false;
       if (F.st === "nogps" && d.lat != null) return false; if (F.st === "unv" && (d.lat == null || d.gps_verified)) return false;
       if (F.st === "nomob" && d.mobile) return false;
+      if (F.st === "nophoto" && d.photo) return false; if (F.st === "photo" && !d.photo) return false;
       if (q && !((d.name + " " + d.area + " " + d.street + " " + d.address + " " + d.town).toUpperCase().includes(q) || (qd.length >= 4 && d.mobile.replace(/\D/g, "").includes(qd)))) return false;
       return true;
     });
@@ -60,8 +61,8 @@
       el.innerHTML = `<div class="box2"><div class="tb">
         <input type="search" id="fq" placeholder="Search name, area, mobile…" style="flex:1;min-width:200px">
         <select id="fsm"><option value="">All salesmen</option><option value="none">No salesman</option>${SALESMEN.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select>
-        <select id="fst"><option value="">All dealers</option><option value="pub">On website</option><option value="hid">Hidden</option><option value="nogps">Missing GPS</option><option value="unv">GPS not verified</option><option value="nomob">Missing mobile</option></select>
-        <span class="sp"></span><button class="btn call" id="addD">+ Add dealer</button><a class="btn" href="/api/admin/export.xlsx">Export Excel</a></div>
+        <select id="fst"><option value="">All dealers</option><option value="pub">On website</option><option value="hid">Hidden</option><option value="nogps">Missing GPS</option><option value="unv">GPS not verified</option><option value="nomob">Missing mobile</option><option value="nophoto">No shop photo</option><option value="photo">Has shop photo</option></select>
+        <span class="sp"></span><button class="btn" id="bulkP">Upload many photos</button><button class="btn call" id="addD">+ Add dealer</button><a class="btn" href="/api/admin/export.xlsx">Export Excel</a></div>
         <div class="tb" id="bulk" hidden><b id="selN"></b><button class="btn" data-b="publish">Show on website</button><button class="btn" data-b="hide">Hide</button><button class="btn" data-b="verify">Mark GPS verified</button>
         <select id="bsm"><option value="">Assign salesman…</option>${SALESMEN.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select><button class="btn danger" data-b="delete">Delete</button></div>
         <div class="tw"><table class="t" id="dt"></table></div><p class="hint" id="dcount" style="color:var(--muted);font-size:13px"></p></div>`;
@@ -70,6 +71,7 @@
       $("#fsm").addEventListener("change", e => { F.sm = e.target.value; drawTable(); });
       $("#fst").addEventListener("change", e => { F.st = e.target.value; drawTable(); });
       $("#addD").addEventListener("click", () => editDealer(null));
+      $("#bulkP").addEventListener("click", bulkPhotos);
       $("#bulk").addEventListener("click", async e => { const b = e.target.closest("[data-b]"); if (!b) return; const act = b.dataset.b;
         if (act === "delete" && !(await confirmBox("Delete dealers?", `${SEL.size} dealers will be removed permanently.`, "Delete", true))) return;
         const r = await call("POST", "/api/admin/dealers/bulk", { ids: [...SEL], action: act }); toast(`${r.changed} dealers updated`); SEL.clear(); refresh(); });
@@ -85,11 +87,12 @@
   function bulkBar() { $("#bulk").hidden = !SEL.size; $("#selN").textContent = `${SEL.size} selected`; }
   function drawTable() {
     const list = filtered(), shown = list.slice(0, 500);
-    $("#dt").innerHTML = `<tr><th><input type="checkbox" id="cbAll" aria-label="Select all"></th><th>Dealer</th><th>Salesman</th><th>Area</th><th>Mobile</th><th>GPS</th><th>Products</th><th>Website</th><th></th></tr>` +
+    $("#dt").innerHTML = `<tr><th><input type="checkbox" id="cbAll" aria-label="Select all"></th><th>Dealer</th><th>Salesman</th><th>Area</th><th>Mobile</th><th>GPS</th><th>Photo</th><th>Products</th><th>Website</th><th></th></tr>` +
       shown.map(d => `<tr><td><input type="checkbox" data-cb="${d.id}" ${SEL.has(d.id) ? "checked" : ""} aria-label="Select"></td><td><b>${esc(d.name)}</b>${d.code ? `<br><small style="color:var(--muted)">Code ${esc(d.code)}</small>` : ""}</td>
         <td>${d.salesman ? `<span class="dot" style="background:${esc(d.color)}"></span>${esc(d.salesman)}` : '<span class="tag no">none</span>'}</td><td>${esc(d.area)}</td>
         <td>${d.mobile ? esc(d.mobile) + (d.show_mobile ? "" : ' <span class="tag gr">hidden</span>') : '<span class="tag no">missing</span>'}</td>
         <td>${d.lat == null ? '<span class="tag no">missing</span>' : d.gps_verified ? '<span class="tag ok">verified</span>' : '<span class="tag mid">check</span>'}</td>
+        <td>${d.photo ? `<img src="/api/admin/dealers/${d.id}/photo?s=t&v=${d.photo}" alt="" loading="lazy" style="width:40px;height:40px;object-fit:cover;border-radius:8px;display:block">` : '<span class="tag gr">none</span>'}</td>
         <td>${[d.has_atta && "Atta", d.has_maida && "Maida", d.has_choker && "Choker"].filter(Boolean).join(", ") || "—"}</td>
         <td><button class="btn" data-pub="${d.id}">${d.published ? "✓ Shown" : "Hidden"}</button></td><td><button class="btn" data-ed="${d.id}">Edit</button></td></tr>`).join("");
     $("#dcount").textContent = `${list.length} dealers${list.length > 500 ? " (first 500 shown, narrow the search)" : ""}`;
@@ -126,6 +129,9 @@
       <label class="chk"><input type="checkbox" name="has_maida" ${d.has_maida ? "checked" : ""}> Maida available</label>
       <label class="chk"><input type="checkbox" name="has_choker" ${d.has_choker ? "checked" : ""}> Choker available</label>
       <label class="chk"><input type="checkbox" name="published" ${d.published ? "checked" : ""}> Show on public website</label>
+      <div class="wide photo-box"><div class="ph-prev" id="phPrev">${id && d.photo ? `<img src="/api/admin/dealers/${id}/photo?v=${d.photo}" alt="Shop photo">` : "No shop photo yet"}</div>
+        <div><b style="color:var(--ink)">Shop photo</b><p style="margin:4px 0 8px;font-size:12.5px;color:var(--muted)">Shown on the website in this dealer's card. Any JPG or PNG; it is made smaller automatically.${id ? "" : " Save the dealer first, then add the photo."}</p>
+        ${id ? `<input type="file" id="phFile" accept="image/*" hidden><button type="button" class="btn" id="phPick">${d.photo ? "Change photo" : "Upload photo"}</button> <button type="button" class="btn danger" id="phDel" ${d.photo ? "" : "hidden"}>Remove photo</button> <span id="phMsg" style="font-size:12.5px"></span>` : ""}</div></div>
       <label class="wide">Internal notes (never shown publicly)<textarea name="notes" rows="2">${esc(d.notes)}</textarea></label>
       <div class="wide" id="dmsg"></div>
       <div class="wide row-end">${id ? '<button type="button" class="btn danger" id="del">Delete</button><span style="flex:1"></span>' : ""}<button type="button" class="btn" id="cx">Cancel</button><button class="btn call" type="submit">${id ? "Save" : "Add dealer"}</button></div></form>`);
@@ -133,6 +139,13 @@
     $("#cx").addEventListener("click", closeModal);
     $("#paste").addEventListener("input", e => { const m = /(-?\d{1,2}\.\d{3,})\s*[, ]\s*(-?\d{1,3}\.\d{3,})/.exec(decodeURIComponent(e.target.value)); if (m) { f.lat.value = m[1]; f.lng.value = m[2]; placePin(); } });
     if ($("#del")) $("#del").addEventListener("click", async () => { if (await confirmBox("Delete dealer?", `${d.name} will be removed permanently.`, "Delete", true)) { await call("DELETE", "/api/admin/dealers/" + id); toast("Deleted"); refresh(); } });
+    if ($("#phPick")) {
+      $("#phPick").addEventListener("click", () => $("#phFile").click());
+      $("#phFile").addEventListener("change", async e => { const file = e.target.files[0]; if (!file) return; const msg = $("#phMsg"); msg.textContent = "Uploading…";
+        try { await uploadPhoto(id, file); const x = DEALERS.find(v => v.id === id); x.photo = Math.floor(Date.now() / 1000); $("#phPrev").innerHTML = `<img src="/api/admin/dealers/${id}/photo?v=${x.photo}" alt="Shop photo">`; $("#phDel").hidden = false; $("#phPick").textContent = "Change photo"; msg.textContent = "Photo saved."; drawTable(); }
+        catch (err) { msg.textContent = err.message; } e.target.value = ""; });
+      $("#phDel").addEventListener("click", async () => { await call("DELETE", `/api/admin/dealers/${id}/photo`); const x = DEALERS.find(v => v.id === id); x.photo = 0; $("#phPrev").textContent = "No shop photo yet"; $("#phDel").hidden = true; $("#phPick").textContent = "Upload photo"; $("#phMsg").textContent = "Photo removed."; drawTable(); });
+    }
     let gm, pin;
     function placePin() { if (!gm) return; const la = +f.lat.value, ln = +f.lng.value; if (!la || !ln) return; const p = { lat: la, lng: ln }; if (!pin) { pin = new google.maps.Marker({ map: gm, position: p, draggable: true }); pin.addListener("dragend", ev => { f.lat.value = ev.latLng.lat().toFixed(7); f.lng.value = ev.latLng.lng().toFixed(7); }); } else pin.setPosition(p); gm.setCenter(p); gm.setZoom(18); }
     loadMaps().then(() => { gm = new google.maps.Map($("#emap"), { center: d.lat ? { lat: d.lat, lng: d.lng } : { lat: 30.1984, lng: 71.4687 }, zoom: d.lat ? 18 : 12, mapTypeId: "hybrid", streetViewControl: false, mapTypeControl: true });
@@ -147,6 +160,41 @@
       if (force) body.force = true;
       try { await call(id ? "PUT" : "POST", id ? "/api/admin/dealers/" + id : "/api/admin/dealers", body); closeModal(); toast(id ? "Saved" : "Dealer added"); refresh(); }
       catch (err) { if (err.status === 409) { force = true; $("#dmsg").innerHTML = `<div class="msg warn">${esc(err.message)} Press the button again to add anyway.</div>`; } else $("#dmsg").innerHTML = `<div class="msg err">${esc(err.message)}</div>`; }
+    });
+  }
+
+  /* ---------- shop photos ---------- */
+  // Shrinks a picture in the browser (keeps the phone's rotation) and returns a JPEG as base64.
+  async function shrink(file, max, quality) {
+    let src; try { src = await createImageBitmap(file, { imageOrientation: "from-image" }); } catch (_) {
+      src = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error("This file is not a picture.")); im.src = URL.createObjectURL(file); }); }
+    const k = Math.min(1, max / Math.max(src.width, src.height)), w = Math.round(src.width * k), h = Math.round(src.height * k);
+    const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.drawImage(src, 0, 0, w, h);
+    return c.toDataURL("image/jpeg", quality).split(",")[1];
+  }
+  async function uploadPhoto(dealerId, file) {
+    if (!/^image\//.test(file.type) && !/\.(jpe?g|png|webp)$/i.test(file.name)) throw new Error("Choose a JPG or PNG photo.");
+    const image = await shrink(file, 1000, 0.8), thumb = await shrink(file, 200, 0.75);
+    await call("PUT", `/api/admin/dealers/${dealerId}/photo`, { image, thumb });
+  }
+  // Many photos at once: each file is named after the dealer's party code (for example 9660.jpg).
+  function bulkPhotos() {
+    const b = modal(`<h2>Upload many shop photos</h2><p style="color:var(--muted);margin-top:0">Name each picture after the dealer's <b>party code</b>, for example <b>9660.jpg</b>. Choose all the files together. A dealer that already has a photo gets the new one.</p>
+      <input type="file" id="bpFile" accept="image/*" multiple hidden><div class="row-end" style="justify-content:flex-start"><button class="btn call" id="bpPick">Choose photos</button><button class="btn" id="bpClose">Close</button></div><div id="bpOut" style="margin-top:12px;font-size:13.5px"></div>`);
+    $("#bpClose").addEventListener("click", () => { closeModal(); refresh(); });
+    $("#bpPick").addEventListener("click", () => $("#bpFile").click());
+    $("#bpFile").addEventListener("change", async e => {
+      const files = [...e.target.files], out = $("#bpOut"), byCode = new Map(DEALERS.filter(d => d.code).map(d => [String(d.code), d]));
+      let ok = 0; const bad = [];
+      $("#bpPick").disabled = true;
+      for (const [i, f] of files.entries()) {
+        const code = f.name.replace(/\.[^.]+$/, "").trim().replace(/^P(?=\d)/i, ""), d = byCode.get(code);
+        out.textContent = `Uploading ${i + 1} of ${files.length}…`;
+        if (!d) { bad.push(`${f.name}: no dealer with party code ${code}`); continue; }
+        try { await uploadPhoto(d.id, f); ok++; } catch (err) { bad.push(`${f.name}: ${err.message}`); }
+      }
+      $("#bpPick").disabled = false; e.target.value = "";
+      out.innerHTML = `<div class="msg ok">${ok} photos saved.</div>` + (bad.length ? `<div class="msg warn">${bad.length} not saved:<br>${bad.slice(0, 40).map(esc).join("<br>")}${bad.length > 40 ? "<br>…" : ""}</div>` : "");
     });
   }
 
